@@ -102,7 +102,7 @@ def process_audio(sample):
         with open(os.path.join("output", f"{audio_id}_speaker_transcript.txt"), "w") as f:
             f.write("\n".join(transcript_lines))
 
-    # runs the whisper-based diarization 
+    # runs the whisper-based diarization
     elif DIARIZATION_METHOD == "whisper_embedding":
         clear_memory()
         # get timed segments from Whisper
@@ -160,8 +160,7 @@ def process_audio(sample):
 
             # generate the transcript
             transcript_lines = [
-                f"{seg['start']:.1f}-{seg['end']
-                    :.1f}] {speaker}: {seg['text']}"
+                f"{seg['start']:.1f}-{seg['end']:.1f}] {speaker}: {seg['text']}"
                 for seg, speaker in zip(segments, speaker_labels)
             ]
 
