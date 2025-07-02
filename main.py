@@ -20,9 +20,8 @@ from utils import clear_memory
 from preprocess.preprocess_pipeline import preprocess_file
 
 # load voxconverse dataset
-dataset = load_dataset("diarizers-community/voxconverse",
-                       trust_remote_code=True)
-test_files = dataset["test"].select(range(1))   # change range to whatever num of audio files you wish to process
+dataset = load_dataset("diarizers-community/voxconverse", trust_remote_code=True)
+test_files = dataset["test"].select(range(1))  # change range to whatever num of audio files you wish to process
 
 # create temp directory
 os.makedirs("tmp", exist_ok=True)
