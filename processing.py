@@ -109,12 +109,17 @@ def process_audio(sample):
         segments = transcribe_with_timestamps(waveform, sample_rate)
         embedding_model = SpeakerEmbeddingModel()
         known_speakers = []     # stores the speaker embeddings
-        speaker_labels = []     # stores the speaker IDs per segment
+
+        # Store segments with an index to reorder later
+        indexed_segments = [{'original_index': i, **s} for i, s in enumerate(segments)]
 
         # process longest segments first for better memory usage
-        segments.sort(key=lambda s: s["end"] - s["start"], reverse=True)
+        indexed_segments.sort(key=lambda s: s["end"] - s["start"], reverse=True)
 
-        for seg in segments:
+        # This will store speaker labels but in the sorted order
+        speaker_labels_sorted = []
+
+        for seg in tqdm(indexed_segments, desc=f"Diarizing and embedding {audio_id}"):
             duration = seg["end"] - seg["start"]
             seg_start = int(seg["start"] * sample_rate)
             seg_end = int(seg["end"] * sample_rate)
@@ -122,7 +127,7 @@ def process_audio(sample):
 
             # skip very short segments (usually noise)
             if duration < MIN_EMBEDDING_DURATION:
-                speaker_labels.append("SPK_UNK")
+                speaker_labels_sorted.append("SPK_UNK")
                 continue
 
             # extract speaker embeddings
@@ -132,12 +137,12 @@ def process_audio(sample):
                 clear_memory()
 
                 if embedding is None:
-                    speaker_labels.append("SPK_UNK")
+                    speaker_labels_sorted.append("SPK_UNK")
                     continue
 
             except Exception as e:
                 print(f"Embedding error: {e}")
-                speaker_labels.append("SPK_UNK")
+                speaker_labels_sorted.append("SPK_UNK")
                 continue
 
             # match with speakers known so far
@@ -148,7 +153,7 @@ def process_audio(sample):
 
                 similarity = cosine_similarity(embedding, known_emb)
                 if similarity > SPEAKER_SIMILARITY_THRESHOLD:
-                    speaker_labels.append(f"SPK_{i}")
+                    speaker_labels_sorted.append(f"SPK_{i}")
                     matched = True
                     break
 
@@ -156,15 +161,22 @@ def process_audio(sample):
             if not matched:
                 new_id = len(known_speakers)
                 known_speakers.append(embedding)
-                speaker_labels.append(f"SPK_{new_id}")
+                speaker_labels_sorted.append(f"SPK_{new_id}")
 
-            # generate the transcript
-            transcript_lines = [
-                f"{seg['start']:.1f}-{seg['end']:.1f}] {speaker}: {seg['text']}"
-                for seg, speaker in zip(segments, speaker_labels)
-            ]
+        # Associate speaker labels with their segments
+        for i in range(len(indexed_segments)):
+            indexed_segments[i]['speaker'] = speaker_labels_sorted[i]
+            
+        # Sort back to original order
+        indexed_segments.sort(key=lambda s: s['original_index'])
 
-            # save the transcript
-            os.makedirs("output", exist_ok=True)
-            with open(os.path.join("output", f"{audio_id}_speaker_transcript_emb.txt"), "w") as f:
-                f.write("\n".join(transcript_lines))
+        # generate the transcript
+        transcript_lines = [
+            f"[{seg['start']:.1f}-{seg['end']:.1f}] {seg['speaker']}: {seg['text']}"
+            for seg in indexed_segments
+        ]
+
+        # save the transcript
+        os.makedirs("output", exist_ok=True)
+        with open(os.path.join("output", f"{audio_id}_speaker_transcript_emb.txt"), "w") as f:
+            f.write("\n".join(transcript_lines))
