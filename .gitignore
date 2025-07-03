@@ -1,5 +1,6 @@
 # Custom ignores
 misc/
+output/
 pretrained_models/
 pyannote_test1/
 tmp/
@@ -7,6 +8,7 @@ token.txt
 
 # .gitignore Python template stuff
 # Byte-compiled / optimized / DLL files
+.idea/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -136,6 +138,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.python-version
 .env
 .venv
 env/
