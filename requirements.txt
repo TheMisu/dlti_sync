@@ -1,0 +1,11 @@
+datasets
+librosa
+noisereduce
+numpy
+soundfile
+speechbrain
+torch
+torchaudio
+transformers
+tqdm
+pyannote.audio
