@@ -1,0 +1,82 @@
+Plan: Centralized Speaker Database
+
+  This plan outlines the steps to create and manage a speakers.json file to
+  identify speakers consistently across multiple audio files.
+
+  Phase 1: Create the Database Management Module
+
+   1. Create `speaker_db.py`:
+       * Create a new file named speaker_db.py. This module will handle all
+         interactions with the speakers.json file.
+       * The speakers.json file will store an array of speaker objects. Each
+         object will have this structure:
+
+   1         {
+   2           "id": "speaker_001",
+   3           "name": "Known Speaker 1",
+   4           "embeddings": [
+   5             [0.1, 0.2, ..., 0.9],
+   6             [0.15, 0.25, ..., 0.95]
+   7           ]
+   8         }
+
+   2. Implement Core Database Functions in `speaker_db.py`:
+       * `load_db(path)`:
+           * Reads the JSON file from the given path.
+           * If the file doesn't exist, it returns an empty list [].
+       * `save_db(path, db)`:
+           * Writes the provided database object back to the JSON file.
+       * `get_or_create_speaker(db, new_embedding, threshold)`:
+           * This is the core logic function. It takes the database, a new
+             speaker embedding, and a similarity threshold.
+           * It will iterate through each speaker in the db. For each speaker,
+             it calculates the average cosine similarity between the
+             new_embedding and all of the speaker's stored embeddings.
+           * If a match is found (similarity > threshold): It returns the
+             existing speaker's object.
+           * If no match is found: It creates a new speaker object, assigns a
+             new unique ID (e.g., speaker_00X), adds the new_embedding to its
+             list of embeddings, appends this new object to the db, and
+             returns the new speaker object.
+
+  Phase 2: Integrate with Existing Pipeline
+
+   1. Modify `diarization.py`:
+       * At the beginning of your main diarization function, call
+         speaker_db.load_db() to load the existing speaker database.
+       * After the diarization model (e.g., pyannote) has processed the audio
+         and generated speaker segments with their corresponding voice
+         embeddings, you will modify the speaker assignment logic.
+       * Instead of assigning temporary labels like SPEAKER_00, SPEAKER_01,
+         you will loop through each unique speaker found in the new audio
+         file.
+       * For each unique speaker, you will call
+         speaker_db.get_or_create_speaker() with their embedding. This
+         function will return a speaker object with a persistent ID.
+       * You will then map this persistent ID to all segments spoken by that
+         speaker in the current file.
+
+   2. Update `main.py`:
+       * Ensure the main processing pipeline correctly calls the updated
+         diarization.py script.
+       * The final output of the entire process (the transcription with
+         speaker labels) should now use the persistent IDs from the
+         speakers.json database.
+       * After the entire file has been processed, call speaker_db.save_db()
+         to save any new speakers that were identified.
+
+  Phase 3: Configuration and Refinement
+
+   1. Update `config.py`:
+       * Add a new configuration variable, SPEAKER_SIMILARITY_THRESHOLD. A good
+          starting value might be 0.85. This will allow you to easily tune how
+         sensitive the speaker matching is without changing the code.
+
+   2. Refine Embedding Strategy:
+       * Initially, you can simply append new embeddings to a speaker's list.
+       * A more advanced approach would be to re-calculate an "average" or
+         "centroid" embedding for each speaker every time a new, high-quality
+         embedding is added. This would make the matching process more
+         efficient and accurate over time. You can add this logic to the
+         get_or_create_speaker function.
+
