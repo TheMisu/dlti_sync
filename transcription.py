@@ -8,26 +8,37 @@ from fsspec.utils import tempfile
 import numpy as np
 import torch
 from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2FeatureEncoder
-from config import USE_WHISPER, MAX_AUDIO_LEN_WHISPER
+from config import USE_WHISPER, MAX_AUDIO_LEN_WHISPER, DEVICE
 import soundfile as sf
 import os
 
-# initialize the transcription model
-if USE_WHISPER:
-    from transformers import pipeline as hf_pipeline
-    transcriber = hf_pipeline(
-        "automatic-speech-recognition",
-        model="openai/whisper-small.en",
-        device=0 if torch.cuda.is_available() else -1,
-        chunk_length_s=30
-    )
-else:
-    from speechbrain.pretrained import EncoderDecoderASR
-    transcriber = EncoderDecoderASR.from_hparams(
-        source="speechbrain/asr-crdnn-commonvoice-en",
-        savedir="pretrained_models/asr-crdnn-commonvoice-en",
-        run_opts={"device": "cuda" if torch.cuda.is_available() else "cpu"}
-    )
+print("DEBUG: Initializing the transcription model.")
+try:
+    # initialize the transcription model
+    if USE_WHISPER:
+        print("DEBUG: Loading Whisper for transcription.")
+        from transformers import pipeline as hf_pipeline
+        whisper_device = 0 if DEVICE.type == "cuda" else -1
+        transcriber = hf_pipeline(
+            "automatic-speech-recognition",
+            model="openai/whisper-large-v2",
+            device=whisper_device,
+            chunk_length_s=30,
+            generate_kwargs={"language": "english", "task": "transcribe"}
+        )
+        print("DEBUG: Whisper loaded successfully.")
+    else:
+        print("DEBUG: Loading SpeechBrain ASR model.")
+        from speechbrain.pretrained import EncoderDecoderASR
+        transcriber = EncoderDecoderASR.from_hparams(
+            source="speechbrain/asr-crdnn-commonvoice-en",
+            savedir="pretrained_models/asr-crdnn-commonvoice-en",
+            run_opts={"device": "cuda" if torch.cuda.is_available() else "cpu"}
+        )
+        print("DEBUG: SpeechBrain loaded successfully.")
+    print("DEBUG: Transcription model loaded successfully.")
+except Exception as e:
+    print(f"ERROR: Failed to initialize transcription model: {e}")
 
 
 def transcribe_segment(audio_segment, sample_rate):

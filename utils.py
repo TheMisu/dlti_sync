@@ -27,7 +27,8 @@ def cosine_similarity(a, b):
     b -- second vector (numpy array or torch tensor)
 
     Returns:
-    float: cosine similarity score (0 on error)
+    float: cosine similarity score
+           or np.nan if inputs are invalid (NaN, div by 0 etc)
     """
     try:
         if isinstance(a, torch.Tensor):
@@ -38,7 +39,21 @@ def cosine_similarity(a, b):
         a = a.flatten()
         b = b.flatten()
 
-        return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+        if np.any(np.isnan(a)) or np.any(np.isnan(b)):
+            print("Cosine similarity input contains Nan")
+            return np.nan
+
+        norm_a = np.linalg.norm(a)
+        norm_b = np.linalg.norm(b)
+
+        if norm_a == 0.0 or norm_b == 0.0:
+            print("Cosine similarity input is a zero vector")
+            return np.nan
+
+        dot_product = np.dot(a, b)
+        similarity = dot_product / (norm_a * norm_b)
+
+        return similarity
     except Exception as e:
         print(f"Cosine similarity error: {e}")
-        return 0
+        return np.nan

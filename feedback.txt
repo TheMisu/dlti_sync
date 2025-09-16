@@ -1,0 +1,61 @@
+16.05
+- a single speaker can appear in multiple files
+    * assign which speaker speaks when/where (File 1 from sec x to sec y)
+    * deal with possible overlapping speakers
+- they will provide us with a few tools they are already using after we do our own research
+- check what tools exist for speaker/voice recognition/identification ✅
+    * try to find something that works on more than just one model/that is flexible ✅ (sort of)
+-key words: recognition/identification
+
+===============================================================================
+
+23.05
+- our approach is good but:
+    * research also the limits of the found models
+        + what (time, speaker limit etc) limits do our models have? can we run more than 1h for example
+- prepare some tests for next week ✅
+- presents some slides (or even a pdf) of the tested models
+
+===============================================================================
+
+13.06
+- write msg that we need processing power. test and see how much we need
+- they used Whisper often but it comes with makes many errors
+- try to identify speakers based on peaks in audio. might work better than ours (pyannote) ✅ (sort of)
+- use JSON to store speaker information in dif audio files (basically meta data for all files)
+    * if you have 3 files -> generate 4 files (3 individual and 1 meta file)
+
+===============================================================================
+
+20.06
+- test audio, pause 10/20s, talk again. if the model removes the breaks, it 
+might not be good. breaks are sometimes needed
+    * 5s-8s spoke, 8s-20s brake, 20s... spoke again
+- they still have problems with processing power
+    * should be done next week
+    * need name and sNummer from each group member for using their resources (PM on Discord)
+    * could check more models on HF until next week until we can use their resources and check if they can be used or not (why not)
+    * get used to miniconda and tmux (will be used for connecting to their server)
+===============================================================================
+
+04.07
+!!! for UCE: prune docker, compose postgresql again then run importer and it should work??? (irrelevant)
+- http://r.sd.uni-frankfurt.de/12faeb15 LINK FOR EVALUATION 
+
+- Presentation:
+    * can be in English, can also be a mix or German/English
+        + questions will then be in the lang the presentation was held in
+    * vorschungsfrage vorstellen:
+        + what did we expect, how did we overcome it, what problems did we encounter
+        + present our findings/results
+- Documentation:
+    * can be "just" documented code, does not have to be a separate document
+- For processing power:
+    * send him names and snummer + what type of/how many resources we need
+===============================================================================
+
+Call with Johannes:
+1. Maybe try to implement everything in a Docker container. ✅ (sort of)
+2. Johannes checks new models.
+3. Maybe start working on the presentation.
+===============================================================================

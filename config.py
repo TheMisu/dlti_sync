@@ -14,7 +14,7 @@ USE_WHISPER = True
 USE_DIARIZATION = True
 
 # diarization config
-DIARIZATION_METHOD = "whisper_embedding"  # Options: "pyannote" or "whisper_embedding"
+DIARIZATION_METHOD = "pyannote"  # Options: "pyannote" or "whisper_embedding"
 MIN_EMBEDDING_DURATION = 0.5  # Min audio duration for speaker embedding
 SPEAKER_SIMILARITY_THRESHOLD = 0.7  # Cosine similarity threshold for speaker matching
 MIN_SEGMENT_DURATION = 0.1  # Min diarization segment duration in seconds
@@ -31,3 +31,8 @@ with open("token.txt") as f:
 
 # processing device. uses GPU if cuda is available
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"DEBUG: Configured DEVICE in config.py: {DEVICE}")
+
+# config for json storage
+CENTRAL_EMBEDDINGS_JSON_PATH = "./database/speaker_embeddings.json"
+USE_CENTRAL_EMBEDDINGS = True
