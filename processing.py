@@ -5,6 +5,9 @@ Supports multiple diarization methods: pyannote and whisper-embedding
 """
 
 import os
+import librosa
+import soundfile as sf
+import tempfile
 from torch.utils.data import sampler
 from tqdm import tqdm
 import torch
@@ -19,12 +22,13 @@ from utils import clear_memory, cosine_similarity
 diarization_pipeline = init_diarization_pipeline() if USE_DIARIZATION else None
 
 
-def process_audio(sample):
+def process_audio(sample, return_text=False):
     """
     Method for processing the audio file
 
     Keyword argument:
     sample -- dictionary that contains the audio data and metadata
+    return_text -- returns transcription text instead of saving the file if set to True. False by default
     """
     audio_id = os.path.splitext(os.path.basename(sample["audio"]["path"]))[0]
     waveform = sample["audio"]["array"]
@@ -97,10 +101,17 @@ def process_audio(sample):
             transcript_lines.append(
                 f"[{segment['start']:.1f}-{segment['end']:.1f}] {segment['speaker']}: {text}")
 
-        # save the transcripted files
-        os.makedirs("output", exist_ok=True)
-        with open(os.path.join("output", f"{audio_id}_speaker_transcript.txt"), "w") as f:
-            f.write("\n".join(transcript_lines))
+        # glue lines transcript lines together
+        transcription_text = "\n".join(transcript_lines)
+
+        if return_text:
+            return transcription_text
+        else:
+            # save the transcripted files
+            os.makedirs("output", exist_ok=True)
+            with open(os.path.join("output", f"{audio_id}_speaker_transcript.txt"), "w") as f:
+                f.write(transcription_text)
+            return
 
     # runs the whisper-based diarization
     elif DIARIZATION_METHOD == "whisper_embedding":
@@ -176,7 +187,39 @@ def process_audio(sample):
             for seg in indexed_segments
         ]
 
-        # save the transcript
-        os.makedirs("output", exist_ok=True)
-        with open(os.path.join("output", f"{audio_id}_speaker_transcript_emb.txt"), "w") as f:
-            f.write("\n".join(transcript_lines))
+        # glue transcript lines
+        transcription_text = "\n".join(transcript_lines)
+
+        if return_text:
+            return transcription_text
+        else:
+            # save the transcript
+            os.makedirs("output", exist_ok=True)
+            with open(os.path.join("output", f"{audio_id}_speaker_transcript_emb.txt"), "w") as f:
+                f.write(transcription_text)
+            return
+
+
+def process_audio_from_file(file_path):
+    """
+    Function for processing an audio file instead of a sample from a dataset
+
+    Keyword argument:
+    file_path -- path to the audio file to process
+    """
+    # load the audio
+    waveform, sr = librosa.load(file_path, sr=None)
+
+    # create a sample dict that replicates the dataset format
+    sample = {
+        "audio": {
+            "array": waveform,
+            "sampling_rate": sr,
+            "paht": file_path
+        }
+    }
+
+    # send the "sample" to the processing pipeling and get the transcription
+    transcription_text = process_audio(sample, return_text=True)
+
+    return transcription_text

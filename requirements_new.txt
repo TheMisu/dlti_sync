@@ -1,0 +1,12 @@
+django
+datasets
+librosa
+noisereduce
+numpy
+soundfile
+speechbrain
+transformers
+tqdm
+pyannote.audio==3.0.0
+networkx==2.8.4
+pytorch-lightning==2.0.1
